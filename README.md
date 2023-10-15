@@ -19,14 +19,21 @@ Auth-guard is a powerful user authentication service written in Golang. It provi
 ## Technologies Used :wrench:
 
 - **Golang (Go)**: Auth-guard is written in the Go programming language, known for its performance and efficiency :zap:.
+  
+- **PostgreSQL**: PostgreSQL is used as the primary database for storing user data and related information :elephant:.
 
-- **Chi Routing**: The Chi router is used for flexible and efficient request routing :twisted_rightwards_arrows:.
+- **Chi**: The Chi router is used for flexible and efficient request routing :twisted_rightwards_arrows:.
 
-- **GORM Database Management**: GORM, a powerful Go ORM, is employed to manage user data within a database :floppy_disk:.
+- **GORM**: GORM, a powerful Go ORM, is employed to manage user data within a database :floppy_disk:.
 
-- **Argon2 Password Storage**: Passwords are securely stored and hashed using the Argon2 key derivation function :key:.
+- **Argon2**: Passwords are securely stored and hashed using the Argon2 key derivation function :key:.
 
-- **Redis for Rate Limiting and Caching**: Redis is used for rate limiting to ensure controlled access to essential endpoints :hourglass_flowing_sand: and for caching to enhance service performance :chart_with_upwards_trend:.
+- **Redis**: Redis is used for rate limiting to ensure controlled access to essential endpoints :hourglass_flowing_sand: and for caching to enhance service performance :chart_with_upwards_trend:.
+
+- **Cobra**: Cobra is used for building the command-line interface, making it easy to interact with the service :hammer_and_wrench:.
+
+- **Viper**: Viper simplifies configuration management, allowing for easy customization of the service :gear:.
+
 
 ## Usage :hammer_and_wrench:
 
