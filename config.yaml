@@ -1,0 +1,20 @@
+database:
+  host: localhost #app-db  #  # #
+  port: 5432
+  user: postgres
+  password: 1234
+  dbname: postgres
+
+server:
+  port: 8085
+
+auth:
+  secret_key: "fardinabir"
+  expiry:
+    access_token: 2
+    refresh_token: 4
+
+redis:
+  host: localhost #redis #
+  port: 6379
+#  password: "redispw"
