@@ -51,13 +51,17 @@ func ValidateToken(token string) (jwt.MapClaims, error) {
 		return nil, ErrInvalidToken
 	}
 
-	parsedToken, _ := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrUnauthorizedReq
 		}
 		signSecret := []byte(viper.GetString("auth.secret_key"))
 		return signSecret, nil
 	})
+	if err != nil {
+		log.Println("Invalid Tokens")
+		return nil, ErrInvalidToken
+	}
 	claims := parsedToken.Claims.(jwt.MapClaims)
 
 	if ok := parsedToken.Valid; !ok {
