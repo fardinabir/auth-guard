@@ -1,0 +1,70 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: warden-service
+    url: http://warden-app:8081
+    routes:
+      - name: warden-validate
+        paths:
+          - /tokens/validate
+        strip_path: false
+        methods:
+          - GET
+
+  - name: users-service
+    url: http://user-app:8085 # https://fahimimam.requestcatcher.com/ #
+    routes:
+      - name: users-route-private
+        paths:
+          - /users
+        strip_path: false
+        methods:
+          - GET
+          - PATCH
+          - DELETE
+      - name: users-route-public
+        paths:
+          - /users
+        strip_path: false
+        methods:
+          - POST
+      - name: login-route-public
+        paths:
+          - /login
+        strip_path: false
+        methods:
+          - POST
+      
+plugins:
+  - name: pre-function
+    route: users-route-private
+    config:
+      access:
+        - |
+          local http = require("resty.http")
+          local httpc = http.new()
+          
+          local auth_header = kong.request.get_header("Authorization")
+          if not auth_header then
+            return kong.response.exit(401, { message = "Missing Authorization header" })
+          end
+          
+          local res, err = httpc:request_uri("http://warden-app:8081/tokens/validate", {
+            method = "GET",
+            headers = {
+              ["Authorization"] = auth_header
+            }
+          })
+          
+          if not res or res.status ~= 200 then
+            return kong.response.exit(401, { message = "Invalid token" })
+          end
+
+           -- Parse the response headers
+          kong.service.request.set_header("X-Auth-Authorized", res.headers["X-Auth-Authorized"])
+          kong.service.request.set_header("X-Auth-Expiry", res.headers["X-Auth-Expiry"])
+          kong.service.request.set_header("X-Auth-TokenType", res.headers["X-Auth-TokenType"])
+          kong.service.request.set_header("X-Auth-Username", res.headers["X-Auth-Username"])
+
+    

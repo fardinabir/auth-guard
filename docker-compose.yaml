@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   app-db:
     container_name: user-access-db
     image: postgres
     ports:
-      - "5433:5432"
+      - "5432:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=1234
@@ -13,21 +11,62 @@ services:
     volumes:
       - dbdata:/var/lib/postgresql/data
       - ./db/:/docker-entrypoint-initdb.d/
-  app:
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user-app:
     container_name: user-access
     build:
+      context: ./services/users
       dockerfile: DockerfileServer
     ports:
       - "8085:8085"
     depends_on:
-      - app-db
-      - redis
+      app-db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      warden-app:
+        condition: service_started
+  warden-app:
+    container_name: warden
+    build:
+      context: ./services/warden/
+      dockerfile: DockerfileServer
+    ports:
+      - "8081:8081"
   redis:
     image: redis
     volumes:
       - data:/data
     ports:
       - "6379:6379"
+  kong:
+    image: kong:3.6
+    container_name: kong
+    restart: always
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong.yaml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_PLUGINS: bundled,pre-function
+      KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
+    ports:
+      - "8000:8000"     # Proxy (HTTP)
+      - "8443:8443"     # Proxy (HTTPS)
+      - "8001:8001"     # Admin API (HTTP)
+      - "8444:8444"     # Admin API (HTTPS)
+      - "8002:8002"     # Dev Portal (HTTP)
+      - "8445:8445"     # Dev Portal (HTTPS)
+    volumes:
+      - ./kong.yaml:/usr/local/kong/declarative/kong.yaml
+
 volumes:
   dbdata:
   data:
