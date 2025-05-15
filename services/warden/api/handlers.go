@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/fardinabir/auth-guard/services/warden/internal/token"
@@ -28,6 +29,7 @@ func (h *TokenHandler) GenerateToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tokens := h.tokenAuth.GenerateTokens(req.Username)
+	log.Println("Generated tokens successfully:", tokens)
 	resp := &token.Response{Status: 200, Body: tokens}
 	resp.JSONResponse(w)
 }
@@ -39,6 +41,7 @@ func (h *TokenHandler) ValidateToken(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
+	log.Println("Validated token successfully:", claims)
 	// Set individual headers for each claim
 	w.Header().Set("X-Auth-Authorized", fmt.Sprintf("%t", claims.Authorized))
 	w.Header().Set("X-Auth-Expiry", fmt.Sprintf("%d", claims.Expiry))
