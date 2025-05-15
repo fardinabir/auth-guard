@@ -7,12 +7,14 @@ import (
 )
 
 type UserResource struct {
-	Users UserStore
+	Users       UserStore
+	TokenClient *service.TokenClient
 }
 
 func NewResource() *UserResource {
 	userStore := repos.NewUserStore()
-	return &UserResource{Users: userStore}
+	tokenClient := service.NewTokenClient()
+	return &UserResource{Users: userStore, TokenClient: tokenClient}
 }
 
 func (rs *UserResource) Router() *chi.Mux {
@@ -27,7 +29,8 @@ func (rs *UserResource) Router() *chi.Mux {
 
 func (rs *UserResource) userRouter() *chi.Mux {
 	r := chi.NewRouter()
-	r.Use(service.NativeApiSecurity)
+	r.Use(service.WardenStampChecker)
+	r.Use(service.UserNameChecker)
 	r.Get("/{id:[0-9]+}", rs.ReadUser)
 	r.Get("/", rs.ReadUsers)
 	r.Post("/", rs.CreateUser)

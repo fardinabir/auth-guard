@@ -3,15 +3,16 @@ package users
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/alexedwards/argon2id"
 	"github.com/fardinabir/auth-guard/controllers"
 	"github.com/fardinabir/auth-guard/model"
 	"github.com/fardinabir/auth-guard/service"
 	"github.com/go-chi/chi/v5"
-	"log"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 func (rs *UserResource) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -41,9 +42,13 @@ func (rs *UserResource) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// generating new token
-	jwtAuth := controllers.NewTokenAuth()
-	tokenResp := jwtAuth.GenerateTokens(payload.UserName)
+	// Generate token using Warden service
+	tokenResp, err := rs.TokenClient.GenerateToken(payload.UserName)
+	if err != nil {
+		fmt.Println("Can't generate the token : ", err.Error())
+		controllers.ErrInternalServerError.ErrorResponse().JSONResponse(w)
+		return
+	}
 	resp := &model.Response{Status: 200, Body: tokenResp}
 	resp.JSONResponse(w)
 }
@@ -88,25 +93,11 @@ func (rs *UserResource) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rs *UserResource) HomePage(w http.ResponseWriter, r *http.Request) {
-	headerToken := service.GetHeaderValue(r, "Authorization")
-	token, err := controllers.ValidateToken(headerToken)
-	if err != nil {
-		controllers.ErrUnauthorizedReq.ErrorResponse().JSONResponse(w)
-		return
-	}
-	log.Println(token)
 	fmt.Fprintf(w, "hello, this is the homepage")
 }
 
 func (rs *UserResource) ReadUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("On ReadUser..........")
-	headerToken := service.GetHeaderValue(r, "Authorization")
-	token, err := controllers.ValidateToken(headerToken)
-	if err != nil {
-		controllers.ErrUnauthorizedReq.ErrorResponse().JSONResponse(w)
-		return
-	}
-	log.Println(token)
 
 	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
 	res, err := rs.Users.GetUserById(id)
@@ -120,13 +111,6 @@ func (rs *UserResource) ReadUser(w http.ResponseWriter, r *http.Request) {
 
 func (rs *UserResource) ReadUsers(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("On ReadUsers........")
-	headerToken := service.GetHeaderValue(r, "Authorization")
-	token, err := controllers.ValidateToken(headerToken)
-	if err != nil {
-		controllers.ErrUnauthorizedReq.ErrorResponse().JSONResponse(w)
-		return
-	}
-	log.Println(token)
 
 	qry := map[string]interface{}{}
 	users, err := rs.Users.GetUsers(qry) //database.DB.Find(&users)
@@ -140,13 +124,6 @@ func (rs *UserResource) ReadUsers(w http.ResponseWriter, r *http.Request) {
 
 func (rs *UserResource) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("On UpdateUser.......")
-	headerToken := service.GetHeaderValue(r, "Authorization")
-	token, err := controllers.ValidateToken(headerToken)
-	if err != nil {
-		controllers.ErrUnauthorizedReq.ErrorResponse().JSONResponse(w)
-		return
-	}
-	log.Println(token)
 
 	var payload model.User
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -168,13 +145,6 @@ func (rs *UserResource) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 func (rs *UserResource) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("On DeleteUsers.......")
-	headerToken := service.GetHeaderValue(r, "Authorization")
-	token, err := controllers.ValidateToken(headerToken)
-	if err != nil {
-		controllers.ErrUnauthorizedReq.ErrorResponse().JSONResponse(w)
-		return
-	}
-	log.Println(token)
 
 	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
 	usr, err := rs.Users.Delete(id)
