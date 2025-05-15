@@ -10,9 +10,8 @@ const (
 	UserNameHeaer     = "X-Auth-Username"
 )
 
-func WardenStampChecker(h http.Handler) http.Handler 
 func WardenStampChecker(h http.Handler) http.Handler {
-	fmt.Println("Middleware WardenStampChecker initilized....")
+	fmt.Println("Middleware WardenStampChecker initialized....")
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Middleware WardenStampChecker func called....")
 		authFlag := r.Header.Get(WardenStampHeader)
@@ -26,7 +25,7 @@ func WardenStampChecker(h http.Handler) http.Handler {
 }
 
 func UserNameChecker(h http.Handler) http.Handler {
-	fmt.Println("Middleware UserNameChecker initilized....")
+	fmt.Println("Middleware UserNameChecker initialized....")
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Middleware UserNameChecker func called....")
 		fmt.Println(r.Header)
