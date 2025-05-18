@@ -41,11 +41,14 @@ plugins:
   - name: jwt
     route: users-route-private
     config:
+      anonymous: "anon"
       key_claim_name: source     # claim to identify the token issuer & secret key
       claims_to_verify:
         - exp
 
 consumers:
+  - username: anon
+
   - username: api-consumer
     jwt_secrets:
       - key: "warden"          # Used in the JWT's 'source' claim
