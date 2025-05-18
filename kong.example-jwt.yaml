@@ -1,0 +1,55 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: warden-service
+    url: http://warden-app:8081
+    routes:
+      - name: warden-validate
+        paths:
+          - /tokens/validate
+        strip_path: false
+        methods:
+          - GET
+
+  - name: users-service
+    url: https://fahimimam.requestcatcher.com/ #http://user-app:8085 # 
+    routes:
+      - name: users-route-private
+        paths:
+          - /users
+        strip_path: false
+        methods:
+          - GET
+          - PATCH
+          - DELETE
+      - name: users-route-public
+        paths:
+          - /users
+        strip_path: false
+        methods:
+          - POST
+      - name: login-route-public
+        paths:
+          - /login
+        strip_path: false
+        methods:
+          - POST
+      
+
+plugins:
+  - name: jwt
+    route: users-route-private
+    config:
+      key_claim_name: source     # claim to identify the token issuer & secret key
+      claims_to_verify:
+        - exp
+
+consumers:
+  - username: api-consumer
+    jwt_secrets:
+      - key: "warden"          # Used in the JWT's 'source' claim
+        algorithm: HS256
+        secret: "fardinabir"
+
+    
